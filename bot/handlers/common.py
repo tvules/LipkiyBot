@@ -1,7 +1,7 @@
 from aiogram import Router, types
 from aiogram.filters import CommandStart
 
-from bot.constants import CommonMessage
+from bot.constants import CommonAnswer
 
 router = Router()
 
@@ -11,5 +11,5 @@ async def command_start_handler(message: types.Message) -> None:
     """Handler of the /start command."""
 
     await message.answer(
-        text=CommonMessage.GREETING.format(username=message.from_user.username)
+        text=CommonAnswer.GREETING.format(username=message.from_user.username)
     )
