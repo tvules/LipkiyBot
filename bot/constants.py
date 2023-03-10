@@ -5,6 +5,7 @@ class CommonAnswer(str, Enum):
     """Answers for common handling."""
 
     GREETING = "👋🏻"
+    UNCAUGHT_ERROR = "Что-то произошло не так..."
 
 
 class StickerAnswer(str, Enum):
