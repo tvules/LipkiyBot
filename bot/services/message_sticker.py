@@ -1,8 +1,9 @@
 from io import BytesIO
 from operator import itemgetter
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
+import shortuuid
 from aiogram import Bot
 from aiogram.types import User
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -11,6 +12,7 @@ from pilmoji.source import AppleEmojiSource
 from pydantic import BaseModel, NonNegativeInt, PositiveInt
 from pydantic.color import Color
 
+from bot.config import settings
 from bot.utils import download_user_avatar
 
 
@@ -251,3 +253,16 @@ async def create_sticker_image(bot: Bot, author: User, text: str) -> BytesIO:
     file.seek(0)
 
     return file
+
+
+def create_uuid_from_user_id(user_id: Union[int, str]) -> str:
+    """Create a short URL-safe uuid5 from user_id."""
+
+    return shortuuid.uuid(str(user_id) + settings.SECRET)
+
+
+async def get_stickerset_name_by_user_id(
+    user_id: Union[int, str], bot: Bot
+) -> str:
+    sid = create_uuid_from_user_id(user_id)
+    return f"Set_{sid}_by_{(await bot.me()).username}"

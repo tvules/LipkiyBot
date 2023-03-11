@@ -8,9 +8,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, Message, User
 
 from bot.constants import StickerAnswer, StickerConst
-from bot.services import create_sticker_image
+from bot.services import create_sticker_image, get_stickerset_name_by_user_id
+from bot.services.message_sticker import create_uuid_from_user_id
 from bot.states import DeleteStickerState
-from bot.utils import create_uuid_from_user_id
 
 router = Router()
 
@@ -70,13 +70,11 @@ async def delsticker_command_handler(
     """Handler of the /delsticker command."""
 
     try:
-        set_id = create_uuid_from_user_id(user_id=message.from_user.id)
         await bot.get_sticker_set(
-            f"Set_{set_id}_by_{(await bot.me()).username}"
+            await get_stickerset_name_by_user_id(message.from_user.id, bot)
         )
     except TelegramBadRequest as exc:
         if re.search(r"STICKERSET_INVALID", exc.message, re.I):
-            await state.clear()
             await message.answer(StickerAnswer.STICKERSET_IS_EMPTY)
             return
 
@@ -88,23 +86,26 @@ async def delsticker_command_handler(
 
 
 @router.message(DeleteStickerState.choose_sticker, F.sticker)
-async def process_delete_sticker(message: Message, state: FSMContext) -> None:
+async def process_delete_sticker(
+    message: Message, bot: Bot, state: FSMContext
+) -> None:
     """Handler for the state of the /delsticker command."""
+
+    if message.sticker.set_name != await get_stickerset_name_by_user_id(
+        message.from_user.id, bot
+    ):
+        await message.answer(StickerAnswer.USER_NOT_OWNER_OF_STICKERSET)
+        return
 
     try:
         await message.sticker.delete_from_set()
     except TelegramBadRequest as exc:
-        if re.search(r"STICKERSET_INVALID", exc.message, re.I):
-            await message.answer(StickerAnswer.USER_NOT_OWNER_OF_STICKERSET)
-            return
-
         if re.search(r"STICKERSET_NOT_MODIFIED", exc.message, re.I):
             await message.answer(StickerAnswer.STICKER_ALREADY_DELETED)
             return
 
         else:
             raise
-    finally:
-        await state.clear()
 
+    await state.clear()
     await message.answer(StickerAnswer.STICKER_SUCCESS_DELETED)
