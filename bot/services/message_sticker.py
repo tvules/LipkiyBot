@@ -258,7 +258,7 @@ async def create_sticker_image(bot: Bot, author: User, text: str) -> BytesIO:
 def create_uuid_from_user_id(user_id: Union[int, str]) -> str:
     """Create a short URL-safe uuid5 from user_id."""
 
-    return shortuuid.uuid(str(user_id) + settings.SECRET)
+    return shortuuid.uuid(str(user_id) + settings.secret.get_secret_value())
 
 
 async def get_stickerset_name_by_user_id(
