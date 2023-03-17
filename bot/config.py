@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     token: SecretStr
     secret: SecretStr
 
-    webhook_url: Optional[HttpUrl]
+    webhook_host: Optional[HttpUrl]
     webhook_prefix: Optional[str] = "/telegram-webhook"
     host: str = "127.0.0.1"
     port: int = 8000

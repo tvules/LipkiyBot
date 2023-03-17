@@ -30,13 +30,10 @@ def get_application() -> Application:
     return Application()
 
 
-async def _set_webhook(bot: Bot, webhook) -> None:
+async def _set_webhook(bot: Bot, webhook_url: str) -> None:
     """Set webhook for the bot on the telegram server."""
 
-    await bot.set_webhook(
-        f"{settings.webhook_url}{settings.webhook_prefix}",
-        drop_pending_updates=True,
-    )
+    await bot.set_webhook(webhook_url, drop_pending_updates=True)
 
 
 async def _delete_webhook(bot: Bot) -> None:
@@ -89,7 +86,10 @@ def run():
     bot = get_bot()
     dispatcher = get_dispatcher()
 
-    if settings.webhook_url:
+    if settings.webhook_host:
+        dispatcher["webhook_url"] = (
+            settings.webhook_host + settings.webhook_prefix
+        )
         start_webhook(
             dispatcher,
             bot,
