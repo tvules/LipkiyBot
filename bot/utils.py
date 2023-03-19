@@ -21,4 +21,4 @@ async def download_user_avatar(bot: Bot, user: User) -> Optional[BytesIO]:
 def create_uuid_from_user_id(user_id: Union[int, str]) -> str:
     """Create a short URL-safe uuid5 from user_id."""
 
-    return shortuuid.uuid(str(user_id) + settings.SECRET)
+    return shortuuid.uuid(str(user_id) + settings.secret.get_secret_value())

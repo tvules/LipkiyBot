@@ -8,21 +8,14 @@ class CommonAnswer(str, Enum):
     UNCAUGHT_ERROR = "Что-то произошло не так..."
 
 
-class StickerAnswer(str, Enum):
-    """Answers for sticker handling."""
+class MessageStickerAnswer(str, Enum):
+    """Answers for message sticker handling."""
 
-    STICKERSET_IS_EMPTY = "У Вас пока нет ни одного стикера."
-    USER_NOT_OWNER_OF_STICKERSET = (
-        "К сожалению, это действие невозможно, поскольку "
-        "соответствующий набор стикеров создан не мной или "
-        "Вы не являетесь его создателем."
-    )
-    CHOOSE_STICKER = "Отправь мне стикер, который хочешь удалить."
+    CHOOSE_STICKER = "Отправьте стикер, который хотите удалить."
     STICKER_SUCCESS_DELETED = (
         "Стикер успешно удален, "
         "в течение часа он пропадет из набора у всех пользователей."
     )
-    STICKER_ALREADY_DELETED = "Этот стикер уже удален из набора стикеров."
 
 
 class MessageStickerErrorAnswer(str, Enum):
@@ -35,6 +28,11 @@ class MessageStickerErrorAnswer(str, Enum):
     STICKER_PNG_DIMENSIONS = (
         "Текст сообщения не помещается в допустимые размеры стикера."
     )
+    STICKERSET_IS_EMPTY = "У Вас пока нет созданных стикеров."
+    USER_NOT_OWNER_OF_STICKERSET = (
+        "Этот стикер создан не мной или Вы не являетесь его владельцем."
+    )
+    STICKER_ALREADY_DELETED = "Этот стикер уже удален из набора."
 
 
 class MessageStickerConst(str, Enum):

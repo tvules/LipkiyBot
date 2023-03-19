@@ -8,12 +8,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, Message
 
 from bot.constants import (
+    MessageStickerAnswer,
     MessageStickerConst,
     MessageStickerErrorAnswer,
-    StickerAnswer,
 )
 from bot.schemas import MessageAuthor, MessageStickerCreate
-from bot.services import create_message_sticker_image, get_stickerset_name_by_user
+from bot.services import (
+    create_message_sticker_image,
+    get_stickerset_name_by_user,
+)
 from bot.states import DeleteStickerState
 from bot.utils import download_user_avatar
 
@@ -123,7 +126,7 @@ async def create_sticker_callback(
 
 
 @router.message(Command("delsticker"), ~F.forward_from)
-async def delsticker_command_handler(
+async def command_delsticker_handler(
     message: Message, bot: Bot, state: FSMContext
 ) -> None:
     """Handler of the /delsticker command."""
@@ -134,36 +137,41 @@ async def delsticker_command_handler(
         )
     except TelegramBadRequest as exc:
         if re.search(r"STICKERSET_INVALID", exc.message, re.I):
-            await message.answer(StickerAnswer.STICKERSET_IS_EMPTY)
+            await message.answer(MessageStickerErrorAnswer.STICKERSET_IS_EMPTY)
             return
 
         else:
             raise
 
     await state.set_state(DeleteStickerState.choose_sticker)
-    await message.answer(StickerAnswer.CHOOSE_STICKER)
+    await message.answer(MessageStickerAnswer.CHOOSE_STICKER)
 
 
 @router.message(DeleteStickerState.choose_sticker, F.sticker)
-async def process_delete_sticker(
+async def command_delsticker_state_choose_sticker_handler(
     message: Message, bot: Bot, state: FSMContext
 ) -> None:
-    """Handler for the state of the /delsticker command."""
+    """Handler for the state "choose_sticker" of the /delsticker command."""
 
     if message.sticker.set_name != await get_stickerset_name_by_user(
-        message.from_user, bot):
-        await message.answer(StickerAnswer.USER_NOT_OWNER_OF_STICKERSET)
+        message.from_user, bot
+    ):
+        await message.reply(
+            MessageStickerErrorAnswer.USER_NOT_OWNER_OF_STICKERSET
+        )
         return
 
     try:
         await message.sticker.delete_from_set()
     except TelegramBadRequest as exc:
         if re.search(r"STICKERSET_NOT_MODIFIED", exc.message, re.I):
-            await message.answer(StickerAnswer.STICKER_ALREADY_DELETED)
+            await message.reply(
+                MessageStickerErrorAnswer.STICKER_ALREADY_DELETED
+            )
             return
 
         else:
             raise
 
     await state.clear()
-    await message.answer(StickerAnswer.STICKER_SUCCESS_DELETED)
+    await message.answer(MessageStickerAnswer.STICKER_SUCCESS_DELETED)
