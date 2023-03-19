@@ -6,6 +6,8 @@ class CommonAnswer(str, Enum):
 
     GREETING = "👋🏻"
     UNCAUGHT_ERROR = "Что-то произошло не так..."
+    SUCCESS_CANCELED = "Все активные команды отменены."
+    NO_ACTIVE_COMMANDS = "Нет активных команд, чтобы их отменять."
 
 
 class MessageStickerAnswer(str, Enum):
