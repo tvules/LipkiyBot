@@ -11,11 +11,6 @@ class CommonAnswer(str, Enum):
 class StickerAnswer(str, Enum):
     """Answers for sticker handling."""
 
-    STICKERSET_IS_FULL = (
-        "К сожалению, мне не удалось создать новый стикер, "
-        "потому что набор стикеров уже переполнен 🙄.\n\n"
-        "Для удаления ненужных стикеров воспользуйся командой /delsticker."
-    )
     STICKERSET_IS_EMPTY = "У Вас пока нет ни одного стикера."
     USER_NOT_OWNER_OF_STICKERSET = (
         "К сожалению, это действие невозможно, поскольку "
@@ -30,7 +25,19 @@ class StickerAnswer(str, Enum):
     STICKER_ALREADY_DELETED = "Этот стикер уже удален из набора стикеров."
 
 
-class StickerConst(str, Enum):
-    """Default sticker constants."""
+class MessageStickerErrorAnswer(str, Enum):
+    """Answers for caught errors."""
 
-    STICKER_EMOJI = "🤖"
+    STICKERPACK_STICKERS_TOO_MUCH = (
+        "Набор стикеров переполнен.\n\n"
+        "Команда /delsticker, для удаления ненужных стикеров."
+    )
+    STICKER_PNG_DIMENSIONS = (
+        "Текст сообщения не помещается в допустимые размеры стикера."
+    )
+
+
+class MessageStickerConst(str, Enum):
+    """Message sticker constants."""
+
+    STICKER_EMOJI = "💬"

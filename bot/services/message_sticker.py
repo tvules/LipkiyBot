@@ -1,9 +1,8 @@
 from io import BytesIO
 from operator import itemgetter
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
-import shortuuid
 from aiogram import Bot
 from aiogram.types import User
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -12,8 +11,8 @@ from pilmoji.source import AppleEmojiSource
 from pydantic import BaseModel, NonNegativeInt, PositiveInt
 from pydantic.color import Color
 
-from bot.config import settings
-from bot.utils import download_user_avatar
+from bot.schemas.message_sticker import MessageStickerCreate
+from bot.utils import create_uuid_from_user_id
 
 
 class FontProperties(BaseModel):
@@ -56,43 +55,32 @@ class BodyProperties(BaseModel):
     x_offset: PositiveInt = 15
 
 
-class MsgStickerProperties(BaseModel):
-    """Configuration for drawing a common"""
+class MessageStickerProperties(BaseModel):
+    """Configuration for drawing a message sticker."""
 
     width: PositiveInt = 512
     height: Optional[PositiveInt]
-    fill: Color = Color("#f5f5f5")
+    fill: Color = Color("#ffffff")
     padding: NonNegativeInt = 15
     radius: NonNegativeInt = 30
     avatar: AvatarProperties = AvatarProperties()
     body: BodyProperties = BodyProperties()
 
 
-class MessageAuthor(BaseModel):
-    first_name: str
-    last_name: Optional[str]
-    avatar: Optional[BytesIO]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class MsgSticker:
-    text: str
-    author: MessageAuthor
-    _properties: MsgStickerProperties = MsgStickerProperties()
+class MessageSticker:
+    sticker_dto: MessageStickerCreate
+    _properties: MessageStickerProperties = MessageStickerProperties()
 
     def __init__(
         self,
-        text: str,
-        author: MessageAuthor,
+        sticker_dto: MessageStickerCreate,
         *,
-        properties: Optional[MsgStickerProperties] = None,
+        properties: Optional[MessageStickerProperties] = None,
     ) -> None:
         if properties is not None:
             self._properties = properties
-        self.author = author
-        self.text = text
+        self.author = sticker_dto.author
+        self.text = sticker_dto.text
 
     @property
     def _title_font(self) -> ImageFont.FreeTypeFont:
@@ -239,30 +227,18 @@ class MsgSticker:
         return sticker
 
 
-async def create_sticker_image(bot: Bot, author: User, text: str) -> BytesIO:
-    """Create a sticker from"""
+def create_message_sticker_image(sticker_dto: MessageStickerCreate) -> BytesIO:
+    """Create a sticker image."""
 
-    avatar = await download_user_avatar(bot=bot, user=author)
-    author = MessageAuthor(
-        first_name=author.first_name, last_name=author.last_name, avatar=avatar
+    MessageSticker(sticker_dto).draw().save(
+        fp=(file := BytesIO()), format="png"
     )
-    sticker = MsgSticker(author=author, text=text)
-
-    file = BytesIO()
-    sticker.draw().save(fp=file, format="png")
     file.seek(0)
-
     return file
 
 
-def create_uuid_from_user_id(user_id: Union[int, str]) -> str:
-    """Create a short URL-safe uuid5 from user_id."""
+async def get_stickerset_name_by_user(user: User, bot: Bot) -> str:
+    """Get user's stickerset name."""
 
-    return shortuuid.uuid(str(user_id) + settings.secret.get_secret_value())
-
-
-async def get_stickerset_name_by_user_id(
-    user_id: Union[int, str], bot: Bot
-) -> str:
-    sid = create_uuid_from_user_id(user_id)
+    sid = create_uuid_from_user_id(user.id)
     return f"Set_{sid}_by_{(await bot.me()).username}"
