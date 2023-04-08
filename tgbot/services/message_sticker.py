@@ -11,8 +11,8 @@ from pilmoji.source import AppleEmojiSource
 from pydantic import BaseModel, NonNegativeInt, PositiveInt
 from pydantic.color import Color
 
-from bot.schemas.message_sticker import MessageStickerCreate
-from bot.utils import create_uuid_from_user_id
+from tgbot.schemas.message_sticker import MessageStickerCreate
+from tgbot.utils import create_uuid_from_user_id
 
 
 class FontProperties(BaseModel):

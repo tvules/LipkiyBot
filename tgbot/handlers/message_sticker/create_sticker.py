@@ -3,22 +3,16 @@ import re
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatAction
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, Message
 
-from bot.constants import (
-    MessageStickerAnswer,
-    MessageStickerConst,
-    MessageStickerErrorAnswer,
-)
-from bot.schemas import MessageAuthor, MessageStickerCreate
-from bot.services import (
+from tgbot.constants.message_sticker import DEFAULT_STICKER_EMOJI
+from tgbot.responses.message_sticker import CreateStickerAnswer
+from tgbot.schemas import MessageAuthor, MessageStickerCreate
+from tgbot.services import (
     create_message_sticker_image,
     get_stickerset_name_by_user,
 )
-from bot.states import DeleteStickerState
-from bot.utils import download_user_avatar
+from tgbot.utils import download_user_avatar
 
 router = Router()
 
@@ -93,7 +87,7 @@ async def create_sticker_callback(
         await bot.add_sticker_to_set(
             message.from_user.id,
             set_name,
-            MessageStickerConst.STICKER_EMOJI,
+            DEFAULT_STICKER_EMOJI,
             input_png,
         )
     except TelegramBadRequest as exc:
@@ -102,19 +96,19 @@ async def create_sticker_callback(
                 message.from_user.id,
                 set_name,
                 f"Created by @{(await bot.me()).username}",
-                MessageStickerConst.STICKER_EMOJI,
+                DEFAULT_STICKER_EMOJI,
                 input_png,
             )
 
         elif re.search(r"STICKERPACK_STICKERS_TOO_MUCH", exc.message, re.I):
             await message.answer(
-                MessageStickerErrorAnswer.STICKERPACK_STICKERS_TOO_MUCH
+                CreateStickerAnswer.STICKERPACK_STICKERS_TOO_MUCH
             )
             return
 
         elif re.search(r"STICKER_PNG_DIMENSIONS", exc.message, re.I):
             await message.reply(
-                MessageStickerErrorAnswer.STICKER_PNG_DIMENSIONS
+                CreateStickerAnswer.STICKER_PNG_DIMENSIONS
             )
             return
 
@@ -123,55 +117,3 @@ async def create_sticker_callback(
 
     set_ = await bot.get_sticker_set(set_name)
     await message.reply_sticker(set_.stickers[-1].file_id)
-
-
-@router.message(Command("delsticker"), ~F.forward_from)
-async def command_delsticker_handler(
-    message: Message, bot: Bot, state: FSMContext
-) -> None:
-    """Handler of the /delsticker command."""
-
-    try:
-        await bot.get_sticker_set(
-            await get_stickerset_name_by_user(message.from_user, bot)
-        )
-    except TelegramBadRequest as exc:
-        if re.search(r"STICKERSET_INVALID", exc.message, re.I):
-            await message.answer(MessageStickerErrorAnswer.STICKERSET_IS_EMPTY)
-            return
-
-        else:
-            raise
-
-    await state.set_state(DeleteStickerState.choose_sticker)
-    await message.answer(MessageStickerAnswer.CHOOSE_STICKER)
-
-
-@router.message(DeleteStickerState.choose_sticker, F.sticker)
-async def command_delsticker_state_choose_sticker_handler(
-    message: Message, bot: Bot, state: FSMContext
-) -> None:
-    """Handler for the state "choose_sticker" of the /delsticker command."""
-
-    if message.sticker.set_name != await get_stickerset_name_by_user(
-        message.from_user, bot
-    ):
-        await message.reply(
-            MessageStickerErrorAnswer.USER_NOT_OWNER_OF_STICKERSET
-        )
-        return
-
-    try:
-        await message.sticker.delete_from_set()
-    except TelegramBadRequest as exc:
-        if re.search(r"STICKERSET_NOT_MODIFIED", exc.message, re.I):
-            await message.reply(
-                MessageStickerErrorAnswer.STICKER_ALREADY_DELETED
-            )
-            return
-
-        else:
-            raise
-
-    await state.clear()
-    await message.answer(MessageStickerAnswer.STICKER_SUCCESS_DELETED)
