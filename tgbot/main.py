@@ -6,8 +6,8 @@ from aiogram.webhook.aiohttp_server import (
 from aiohttp.web import run_app
 from aiohttp.web_app import Application
 
-from bot.config import settings
-from bot.handlers import main_router
+from tgbot.config import settings
+from tgbot.handlers import router
 
 
 def get_bot():
@@ -20,7 +20,7 @@ def get_dispatcher() -> Dispatcher:
     """Get a dispatcher object."""
 
     dispatcher = Dispatcher()
-    dispatcher.include_router(main_router)
+    dispatcher.include_router(router)
     return dispatcher
 
 

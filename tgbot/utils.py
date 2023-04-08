@@ -5,7 +5,7 @@ import shortuuid
 from aiogram import Bot
 from aiogram.types import User
 
-from bot.config import settings
+from tgbot.config import settings
 
 
 async def download_user_avatar(bot: Bot, user: User) -> Optional[BytesIO]:
